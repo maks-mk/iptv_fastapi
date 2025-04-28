@@ -2,544 +2,642 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IPTV Плеер</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>IPTV плеер</title>
     <link rel="stylesheet" href="/static/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>IPTV Плеер</h1>
-        </div>
+        <header class="header">
+            <h1>IPTV плеер</h1>
+            <div class="stats-container">
+                <div class="stat-item" title="Количество каналов">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm3.757-11.243a.5.5 0 0 1 0 .707L6.354 9.757a.5.5 0 0 1-.708-.708l5.364-5.364a.5.5 0 0 1 .707 0z"/>
+                    </svg>
+                    <span>Каналов:</span> <span id="channelCount">0</span>
+                </div>
+                <div class="stat-item" title="Время последнего обновления">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
+                        <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
+                    </svg>
+                    <span>Обновлено:</span> <span id="lastUpdate">--:--</span>
+                </div>
+                <button id="refreshBtn" class="refresh-btn" title="Обновить список каналов">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/>
+                        <path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5.002 5.002 0 0 0 8 3zM3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9H3.1z"/>
+                    </svg>
+                    <span class="btn-text">Обновить</span>
+                </button>
+            </div>
+        </header>
 
         <div class="sidebar">
             <div class="search-box">
-                <input id="search" placeholder="Поиск каналов...">
+                <input type="text" id="searchInput" placeholder="Поиск каналов...">
             </div>
-
-            <select id="categorySelect">
-                <option value="">Все категории</option>
+            <select id="categorySelect" title="Выбрать категорию">
+                <option value="all">Все категории</option>
             </select>
-
-            <ul id="channelList" class="channel-list"></ul>
+            <button id="toggleSidebarBtn" class="toggle-sidebar-btn" title="Скрыть/показать панель">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/>
+                </svg>
+            </button>
+            <ul class="channel-list" id="channelList"></ul>
         </div>
 
         <div class="content">
-            <div id="channelInfo" class="channel-info" style="display: none;">
-                <div class="channel-info-logo">
-                    <img id="currentLogo" src="" alt="" onerror="this.style.display='none'; this.parentNode.classList.add('default'); this.parentNode.innerHTML='📺';">
-                </div>
+            <div class="channel-info" id="channelInfo">
+                <div class="channel-info-logo" id="channelInfoLogo"></div>
                 <div class="channel-info-details">
-                    <div id="currentChannelName" class="channel-info-name">Выберите канал</div>
-                    <div id="currentChannelGroup" class="channel-info-group"></div>
+                    <h2 class="channel-info-name" id="channelInfoName">Выберите канал</h2>
+                    <div class="channel-info-group" id="channelInfoGroup"></div>
                 </div>
+                <button id="showSidebarBtn" class="show-sidebar-btn" title="Показать список каналов">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/>
+                    </svg>
+                </button>
             </div>
-
+            
             <div class="player-container">
-                <div id="loadingIndicator"><span class="spinner"></span>Загрузка потока...</div>
-                <div id="errorMessage" class="error-message"></div>
                 <video id="player" controls autoplay></video>
+                <div id="loadingIndicator">
+                    <div class="spinner"></div>
+                    <div>Загрузка трансляции...</div>
+                </div>
+                <div id="errorMessage" class="error-message">
+                    Не удалось загрузить канал. Попробуйте другой.
+                </div>
+                <button id="exitFullscreenBtn" class="fullscreen-exit-button" title="Выйти из полноэкранного режима">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M5.5 0a.5.5 0 0 1 .5.5v4A1.5 1.5 0 0 1 4.5 6h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5zm5 0a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 10 4.5v-4a.5.5 0 0 1 .5-.5zM0 10.5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 6 11.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zm10 1a1.5 1.5 0 0 1 1.5-1.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4z"/>
+                    </svg>
+                </button>
             </div>
 
             <div class="player-controls">
-                <button id="muteBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M11 5L6 9H2V15H6L11 19V5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M19.07 4.93C20.9447 6.80528 21.9979 9.34836 22 12C22 14.6522 20.9447 17.1957 19.07 19.07M15.54 8.46C16.4774 9.39764 17.0039 10.6692 17.0039 11.995C17.0039 13.3208 16.4774 14.5924 15.54 15.53" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Звук</button>
-                <button id="fullscreenBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 3H5C4.46957 3 3.96086 3.21071 3.58579 3.58579C3.21071 3.96086 3 4.46957 3 5V8M21 8V5C21 4.46957 20.7893 3.96086 20.4142 3.58579C20.0391 3.21071 19.5304 3 19 3H16M16 21H19C19.5304 21 20.0391 20.7893 20.4142 20.4142C20.7893 20.0391 21 19.5304 21 19V16M3 16V19C3 19.5304 3.21071 20.0391 3.58579 20.4142C3.96086 20.7893 4.46957 21 5 21H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Полный экран</button>
-                <button id="qualityBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M19.4 15C19.2669 15.3016 19.2272 15.6362 19.286 15.9606C19.3448 16.285 19.4995 16.5843 19.73 16.82L19.79 16.88C19.976 17.0657 20.1235 17.2863 20.2241 17.5291C20.3248 17.7719 20.3766 18.0322 20.3766 18.295C20.3766 18.5578 20.3248 18.8181 20.2241 19.0609C20.1235 19.3037 19.976 19.5243 19.79 19.71C19.6043 19.896 19.3837 20.0435 19.1409 20.1441C18.8981 20.2448 18.6378 20.2966 18.375 20.2966C18.1122 20.2966 17.8519 20.2448 17.6091 20.1441C17.3663 20.0435 17.1457 19.896 16.96 19.71L16.9 19.65C16.6643 19.4195 16.365 19.2648 16.0406 19.206C15.7162 19.1472 15.3816 19.1869 15.08 19.32C14.7842 19.4468 14.532 19.6572 14.3543 19.9255C14.1766 20.1938 14.0813 20.5082 14.08 20.83V21C14.08 21.5304 13.8693 22.0391 13.4942 22.4142C13.1191 22.7893 12.6104 23 12.08 23C11.5496 23 11.0409 22.7893 10.6658 22.4142C10.2907 22.0391 10.08 21.5304 10.08 21V20.91C10.0723 20.579 9.96512 20.258 9.77251 19.9887C9.5799 19.7194 9.31074 19.5143 9 19.4C8.69838 19.2669 8.36381 19.2272 8.03941 19.286C7.71502 19.3448 7.41568 19.4995 7.18 19.73L7.12 19.79C6.93425 19.976 6.71368 20.1235 6.47088 20.2241C6.22808 20.3248 5.96783 20.3766 5.705 20.3766C5.44217 20.3766 5.18192 20.3248 4.93912 20.2241C4.69632 20.1235 4.47575 19.976 4.29 19.79C4.10405 19.6043 3.95653 19.3837 3.85588 19.1409C3.75523 18.8981 3.70343 18.6378 3.70343 18.375C3.70343 18.1122 3.75523 17.8519 3.85588 17.6091C3.95653 17.3663 4.10405 17.1457 4.29 16.96L4.35 16.9C4.58054 16.6643 4.73519 16.365 4.794 16.0406C4.85282 15.7162 4.81312 15.3816 4.68 15.08C4.55324 14.7842 4.34276 14.532 4.07447 14.3543C3.80618 14.1766 3.49179 14.0813 3.17 14.08H3C2.46957 14.08 1.96086 13.8693 1.58579 13.4942C1.21071 13.1191 1 12.6104 1 12.08C1 11.5496 1.21071 11.0409 1.58579 10.6658C1.96086 10.2907 2.46957 10.08 3 10.08H3.09C3.42099 10.0723 3.742 9.96512 4.0113 9.77251C4.28059 9.5799 4.48572 9.31074 4.6 9C4.73312 8.69838 4.77282 8.36381 4.714 8.03941C4.65519 7.71502 4.50054 7.41568 4.27 7.18L4.21 7.12C4.02405 6.93425 3.87653 6.71368 3.77588 6.47088C3.67523 6.22808 3.62343 5.96783 3.62343 5.705C3.62343 5.44217 3.67523 5.18192 3.77588 4.93912C3.87653 4.69632 4.02405 4.47575 4.21 4.29C4.39575 4.10405 4.61632 3.95653 4.85912 3.85588C5.10192 3.75523 5.36217 3.70343 5.625 3.70343C5.88783 3.70343 6.14808 3.75523 6.39088 3.85588C6.63368 3.95653 6.85425 4.10405 7.04 4.29L7.1 4.35C7.33568 4.58054 7.63502 4.73519 7.95941 4.794C8.28381 4.85282 8.61838 4.81312 8.92 4.68H9C9.29577 4.55324 9.54802 4.34276 9.72569 4.07447C9.90337 3.80618 9.99872 3.49179 10 3.17V3C10 2.46957 10.2107 1.96086 10.5858 1.58579C10.9609 1.21071 11.4696 1 12 1C12.5304 1 13.0391 1.21071 13.4142 1.58579C13.7893 1.96086 14 2.46957 14 3V3.09C14.0013 3.41179 14.0966 3.72618 14.2743 3.99447C14.452 4.26276 14.7042 4.47324 15 4.6C15.3016 4.73312 15.6362 4.77282 15.9606 4.714C16.285 4.65519 16.5843 4.50054 16.82 4.27L16.88 4.21C17.0657 4.02405 17.2863 3.87653 17.5291 3.77588C17.7719 3.67523 18.0322 3.62343 18.295 3.62343C18.5578 3.62343 18.8181 3.67523 19.0609 3.77588C19.3037 3.87653 19.5243 4.02405 19.71 4.21C19.896 4.39575 20.0435 4.61632 20.1441 4.85912C20.2448 5.10192 20.2966 5.36217 20.2966 5.625C20.2966 5.88783 20.2448 6.14808 20.1441 6.39088C20.0435 6.63368 19.896 6.85425 19.71 7.04L19.65 7.1C19.4195 7.33568 19.2648 7.63502 19.206 7.95941C19.1472 8.28381 19.1869 8.61838 19.32 8.92V9C19.4468 9.29577 19.6572 9.54802 19.9255 9.72569C20.1938 9.90337 20.5082 9.99872 20.83 10H21C21.5304 10 22.0391 10.2107 22.4142 10.5858C22.7893 10.9609 23 11.4696 23 12C23 12.5304 22.7893 13.0391 22.4142 13.4142C22.0391 13.7893 21.5304 14 21 14H20.91C20.5882 14.0013 20.2738 14.0966 20.0055 14.2743C19.7372 14.452 19.5268 14.7042 19.4 15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Качество</button>
-                <select id="qualitySelect" style="display: none; width: auto; margin: 0 10px;"></select>
+                <button id="playPauseBtn" title="Воспроизведение/Пауза">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/>
+                    </svg>
+                    <span class="btn-text">Воспроизвести</span>
+                </button>
+                <button id="stopBtn" title="Остановить">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M5 3.5h6A1.5 1.5 0 0 1 12.5 5v6a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 11V5A1.5 1.5 0 0 1 5 3.5z"/>
+                    </svg>
+                    <span class="btn-text">Стоп</span>
+                </button>
+                <button id="muteBtn" title="Включить/выключить звук">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M11.536 14.01A8.473 8.473 0 0 0 14.026 8a8.473 8.473 0 0 0-2.49-6.01l-.708.707A7.476 7.476 0 0 1 13.025 8c0 2.071-.84 3.946-2.197 5.303l.708.707z"/>
+                        <path d="M10.121 12.596A6.48 6.48 0 0 0 12.025 8a6.48 6.48 0 0 0-1.904-4.596l-.707.707A5.483 5.483 0 0 1 11.025 8a5.483 5.483 0 0 1-1.61 3.89l.706.706z"/>
+                        <path d="M10.025 8a4.486 4.486 0 0 1-1.318 3.182L8 10.475A3.489 3.489 0 0 0 9.025 8c0-.966-.392-1.841-1.025-2.475l.707-.707A4.486 4.486 0 0 1 10.025 8zM7 4a.5.5 0 0 0-.812-.39L3.825 5.5H1.5A.5.5 0 0 0 1 6v4a.5.5 0 0 0 .5.5h2.325l2.363 1.89A.5.5 0 0 0 7 12V4zM4.312 6.39 6 5.04v5.92L4.312 9.61A.5.5 0 0 0 4 9.5H2v-3h2a.5.5 0 0 0 .312-.11z"/>
+                    </svg>
+                    <span class="btn-text">Без звука</span>
+                </button>
+                <button id="fullscreenBtn" title="Полноэкранный режим">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M1.5 1a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4A1.5 1.5 0 0 1 1.5 0h4a.5.5 0 0 1 0 1h-4zM10 .5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 16 1.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zM.5 10a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 0 14.5v-4a.5.5 0 0 1 .5-.5zm15 0a.5.5 0 0 1 .5.5v4a1.5 1.5 0 0 1-1.5 1.5h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5z"/>
+                    </svg>
+                    <span class="btn-text">На весь экран</span>
+                </button>
+                <select id="qualitySelect" title="Выбрать качество видео">
+                    <option value="auto">Авто</option>
+                </select>
             </div>
         </div>
     </div>
 
     <script>
-        // Глобальные переменные
-        let channels = [];
-        let categories = {};
-        let currentHls = null;
-        let currentChannelElement = null;
-        let debugMode = false; // Отключаем отладку в пользовательской версии
-
-        // Инициализация DOM-элементов при загрузке страницы
         document.addEventListener('DOMContentLoaded', function() {
-            initUI();
-            loadChannels();
-        });
-
-        // Инициализация интерфейса
-        function initUI() {
-            try {
-                // Проверяем наличие всех необходимых элементов
-                const requiredElements = [
-                    'search', 'categorySelect', 'channelList', 
-                    'channelInfo', 'currentLogo', 'currentChannelName', 
-                    'currentChannelGroup', 'player', 'loadingIndicator', 
-                    'errorMessage', 'muteBtn', 'fullscreenBtn', 'qualityBtn', 'qualitySelect'
-                ];
-                
-                // Проверяем, что все элементы существуют
-                for (const id of requiredElements) {
-                    if (!document.getElementById(id)) {
-                        console.error(`Элемент с id "${id}" не найден в DOM`);
-                    }
-                }
-                
-                // Привязываем обработчики событий
-                document.getElementById('search').addEventListener('input', (e) => {
-                    renderChannels(e.target.value);
-                });
-
-                document.getElementById('categorySelect').addEventListener('change', () => {
-                    renderChannels(document.getElementById('search').value);
-                });
-                
-                // Кнопка включения/выключения звука
-                const muteBtn = document.getElementById('muteBtn');
-                if (muteBtn) {
-                    muteBtn.addEventListener('click', () => {
-                        const video = document.getElementById('player');
-                        if (video) {
-                            video.muted = !video.muted;
-                            muteBtn.textContent = video.muted ? '🔊 Вкл. звук' : '🔇 Выкл. звук';
-                        }
-                    });
-                }
-                
-                // Кнопка полноэкранного режима
-                const fullscreenBtn = document.getElementById('fullscreenBtn');
-                if (fullscreenBtn) {
-                    fullscreenBtn.addEventListener('click', () => {
-                        const video = document.getElementById('player');
-                        if (!video) return;
-                        
-                        if (video.requestFullscreen) {
-                            video.requestFullscreen();
-                        } else if (video.webkitRequestFullscreen) { /* Safari */
-                            video.webkitRequestFullscreen();
-                        } else if (video.msRequestFullscreen) { /* IE11 */
-                            video.msRequestFullscreen();
-                        }
-                    });
-                }
-                
-                // Кнопка выбора качества
-                const qualityBtn = document.getElementById('qualityBtn');
-                const qualitySelect = document.getElementById('qualitySelect');
-                
-                if (qualityBtn && qualitySelect) {
-                    qualityBtn.addEventListener('click', () => {
-                        if (qualitySelect.style.display === 'none') {
-                            qualitySelect.style.display = 'inline-block';
-                            qualityBtn.textContent = '🔄 Скрыть';
-                        } else {
-                            qualitySelect.style.display = 'none';
-                            qualityBtn.textContent = '🔄 Качество';
-                        }
-                    });
-                    
-                    qualitySelect.addEventListener('change', () => {
-                        if (currentHls) {
-                            const level = parseInt(qualitySelect.value);
-                            currentHls.currentLevel = level;
-                        }
-                    });
-                }
-            } catch (error) {
-                console.error('Ошибка инициализации UI:', error);
-            }
-        }
-
-        // Функция для отладочных сообщений
-        function debugLog(message, data) {
-            if (debugMode) {
-                console.log(`[DEBUG] ${message}`, data);
-            }
-        }
-
-        // Загрузка каналов
-        async function loadChannels() {
-            try {
-                const response = await fetch('/channels');
-                const data = await response.json();
-                channels = data.channels;
-                categories = data.categories;
-                populateCategories();
-                renderChannels('');
-            } catch (error) {
-                console.error('Ошибка загрузки каналов:', error);
-                const errorMsg = document.getElementById('errorMessage');
-                if (errorMsg) {
-                    errorMsg.textContent = 'Ошибка загрузки списка каналов. Пожалуйста, обновите страницу.';
-                    errorMsg.style.display = 'block';
-                }
-            }
-        }
-
-        // Заполнение списка категорий
-        function populateCategories() {
+            const player = document.getElementById('player');
+            const channelList = document.getElementById('channelList');
+            const searchInput = document.getElementById('searchInput');
             const categorySelect = document.getElementById('categorySelect');
-            if (!categorySelect) return;
+            const channelCount = document.getElementById('channelCount');
+            const lastUpdate = document.getElementById('lastUpdate');
+            const refreshBtn = document.getElementById('refreshBtn');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const errorMessage = document.getElementById('errorMessage');
+            const channelInfoName = document.getElementById('channelInfoName');
+            const channelInfoGroup = document.getElementById('channelInfoGroup');
+            const channelInfoLogo = document.getElementById('channelInfoLogo');
+            const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
+            const sidebar = document.querySelector('.sidebar');
             
-            try {
-                // Сортируем категории по алфавиту
-                const sortedCategories = Object.keys(categories).sort();
+            // Кнопки управления плеером
+            const playPauseBtn = document.getElementById('playPauseBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const muteBtn = document.getElementById('muteBtn');
+            const fullscreenBtn = document.getElementById('fullscreenBtn');
+            const exitFullscreenBtn = document.getElementById('exitFullscreenBtn');
+            const qualitySelect = document.getElementById('qualitySelect');
+            const showSidebarBtn = document.getElementById('showSidebarBtn');
+            
+            let channels = [];
+            let categories = new Set();
+            let currentChannel = null;
+            let currentHls = null; // Для хранения текущего экземпляра HLS.js
+            
+            // Инициализация UI состояния
+            loadingIndicator.style.display = 'none';
+            errorMessage.style.display = 'none';
+            
+            // Добавляем обработчики событий на плеер
+            player.addEventListener('playing', () => {
+                loadingIndicator.style.display = 'none';
+                playPauseBtn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z"/>
+                    </svg>
+                    <span class="btn-text">Пауза</span>
+                `;
+                playPauseBtn.title = "Пауза";
+            });
+            
+            player.addEventListener('pause', () => {
+                playPauseBtn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/>
+                    </svg>
+                    <span class="btn-text">Воспроизвести</span>
+                `;
+                playPauseBtn.title = "Воспроизвести";
+            });
+            
+            player.addEventListener('error', () => {
+                loadingIndicator.style.display = 'none';
+                errorMessage.style.display = 'flex';
+                console.error('Ошибка HTML5 плеера:', player.error);
+            });
+            
+            // Управление отображением текста на кнопках для мобильных устройств
+            function updateButtonTextVisibility() {
+                const isMobile = window.innerWidth <= 768;
+                const btnTexts = document.querySelectorAll('.btn-text');
                 
-                for (let cat of sortedCategories) {
-                    const option = document.createElement('option');
-                    option.value = cat;
-                    option.textContent = cat;
-                    categorySelect.appendChild(option);
-                }
-            } catch (error) {
-                console.error('Ошибка при заполнении категорий:', error);
+                btnTexts.forEach(text => {
+                    text.style.display = isMobile ? 'none' : 'inline';
+                });
             }
-        }
-
-        // Отображение списка каналов
-        function renderChannels(filter) {
-            const list = document.getElementById('channelList');
-            if (!list) return;
             
-            try {
-                const selectedCategory = document.getElementById('categorySelect')?.value || '';
-                list.innerHTML = '';
-                
-                // Фильтрация каналов
-                const filteredChannels = channels.filter(ch => 
-                    (!filter || ch.name.toLowerCase().includes(filter.toLowerCase())) &&
-                    (!selectedCategory || ch.group === selectedCategory)
-                );
-                
-                // Сортировка каналов по алфавиту
-                filteredChannels.sort((a, b) => a.name.localeCompare(b.name));
-                
-                if (filteredChannels.length === 0) {
-                    const li = document.createElement('li');
-                    li.className = 'channel-item';
-                    li.textContent = 'Каналы не найдены';
-                    list.appendChild(li);
-                    return;
+            // Переключение видимости боковой панели
+            toggleSidebarBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('hidden');
+            });
+            
+            // Вызываем при загрузке и изменении размера окна
+            window.addEventListener('resize', updateButtonTextVisibility);
+            updateButtonTextVisibility();
+            
+            // Автоматически скрываем сайдбар при выборе канала на мобильных устройствах
+            function hideSidebarOnMobile() {
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.add('hidden');
                 }
+            }
+            
+            // Загрузка списка каналов
+            async function fetchChannels() {
+                refreshBtn.disabled = true;
+                try {
+                    const response = await fetch('/api/channels');
+                    if (!response.ok) {
+                        throw new Error('Ошибка при загрузке каналов');
+                    }
+                    
+                    const data = await response.json();
+                    channels = data.channels;
+                    categories.clear();
+                    
+                    // Обновляем информацию о списке каналов
+                    channelCount.textContent = channels.length;
+                    lastUpdate.textContent = new Date(data.last_update * 1000).toLocaleTimeString();
+                    
+                    // Собираем категории
+                    channels.forEach(channel => {
+                        if (channel.group) {
+                            categories.add(channel.group);
+                        }
+                    });
+                    
+                    updateCategorySelect();
+                    renderChannelList();
+                    
+                    return data; // Возвращаем данные для поддержки Promise chain
+                } catch (error) {
+                    console.error('Ошибка загрузки каналов:', error);
+                    alert('Не удалось загрузить список каналов');
+                    return null;
+                } finally {
+                    refreshBtn.disabled = false;
+                }
+            }
+            
+            // Обновление выпадающего списка категорий
+            function updateCategorySelect() {
+                categorySelect.innerHTML = '<option value="all">Все категории</option>';
                 
-                filteredChannels.forEach(ch => {
+                const sortedCategories = Array.from(categories).sort();
+                sortedCategories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category;
+                    option.textContent = category;
+                    categorySelect.appendChild(option);
+                });
+            }
+            
+            // Отображение списка каналов
+            function renderChannelList() {
+                channelList.innerHTML = '';
+                
+                const searchText = searchInput.value.toLowerCase();
+                const selectedCategory = categorySelect.value;
+                
+                const filteredChannels = channels.filter(channel => {
+                    const matchesSearch = channel.name.toLowerCase().includes(searchText);
+                    const matchesCategory = selectedCategory === 'all' || channel.group === selectedCategory;
+                    return matchesSearch && matchesCategory;
+                });
+                
+                filteredChannels.forEach(channel => {
                     const li = document.createElement('li');
                     li.className = 'channel-item';
-                    li.dataset.url = ch.url;
-                    li.dataset.name = ch.name;
-                    li.dataset.group = ch.group;
+                    li.dataset.id = channel.id;
+                    li.title = channel.name;
                     
-                    // Создаем контейнер для логотипа
                     const logoDiv = document.createElement('div');
                     logoDiv.className = 'channel-logo';
                     
-                    // Ищем URL логотипа в данных канала
-                    const logoMatch = ch.name.match(/tvg-logo="([^"]+)"/);
-                    if (logoMatch && logoMatch[1]) {
+                    if (channel.logo) {
                         const img = document.createElement('img');
-                        img.src = logoMatch[1];
-                        img.alt = '';
+                        img.src = channel.logo;
+                        img.alt = channel.name;
                         img.onerror = function() {
                             this.style.display = 'none';
+                            logoDiv.textContent = channel.name.charAt(0);
                             logoDiv.classList.add('default');
-                            logoDiv.textContent = '📺';
                         };
                         logoDiv.appendChild(img);
                     } else {
+                        logoDiv.textContent = channel.name.charAt(0);
                         logoDiv.classList.add('default');
-                        logoDiv.textContent = '📺';
                     }
                     
-                    // Добавляем логотип
+                    const textDiv = document.createElement('div');
+                    textDiv.className = 'channel-text';
+                    
+                    const nameDiv = document.createElement('div');
+                    nameDiv.className = 'channel-name';
+                    nameDiv.textContent = channel.name;
+                    
+                    const groupDiv = document.createElement('div');
+                    groupDiv.className = 'channel-group';
+                    groupDiv.textContent = channel.group || 'Без категории';
+                    
+                    textDiv.appendChild(nameDiv);
+                    textDiv.appendChild(groupDiv);
+                    
                     li.appendChild(logoDiv);
+                    li.appendChild(textDiv);
                     
-                    // Добавляем название (очищенное от лишних данных)
-                    const nameSpan = document.createElement('span');
-                    nameSpan.textContent = cleanChannelName(ch.name);
-                    li.appendChild(nameSpan);
+                    li.addEventListener('click', () => {
+                        playChannel(channel);
+                        hideSidebarOnMobile();
+                    });
                     
-                    // Обработчик клика
-                    li.onclick = function() {
-                        try {
-                            if (currentChannelElement) {
-                                currentChannelElement.classList.remove('playing');
-                            }
-                            currentChannelElement = li;
-                            li.classList.add('playing');
-                            
-                            // Отображаем информацию о текущем канале
-                            showChannelInfo(ch);
-                            
-                            // Запускаем воспроизведение
-                            playChannel(ch.url);
-                        } catch (error) {
-                            console.error('Ошибка при клике на канал:', error);
-                        }
-                    };
-                    
-                    list.appendChild(li);
+                    channelList.appendChild(li);
                 });
-            } catch (error) {
-                console.error('Ошибка отображения каналов:', error);
             }
-        }
-        
-        // Функция очистки названия канала от служебных данных
-        function cleanChannelName(name) {
-            if (!name) return '';
             
-            try {
-                return name.replace(/tvg-id="[^"]*" tvg-logo="[^"]*" group-title="[^"]*",/g, '')
-                           .replace(/tvg-id="[^"]*" group-title="[^"]*" tvg-logo="[^"]*",/g, '')
-                           .replace(/tvg-logo="[^"]*" tvg-id="[^"]*" group-title="[^"]*",/g, '')
-                           .replace(/group-title="[^"]*",/g, '')
-                           .replace(/tvg-logo="[^"]*",/g, '')
-                           .replace(/tvg-id="[^"]*",/g, '')
-                           .trim();
-            } catch (error) {
-                console.error('Ошибка очистки имени канала:', error);
-                return name;
-            }
-        }
-        
-        // Отображение информации о текущем канале
-        function showChannelInfo(channel) {
-            try {
-                const infoContainer = document.getElementById('channelInfo');
-                const logoImg = document.getElementById('currentLogo');
-                const channelName = document.getElementById('currentChannelName');
-                const channelGroup = document.getElementById('currentChannelGroup');
-                
-                // Проверяем, что все элементы найдены
-                if (!infoContainer || !channelName || !channelGroup) {
-                    console.error('Элементы информации о канале не найдены');
-                    return;
-                }
-                
-                // Ищем URL логотипа
-                const logoMatch = channel.name.match(/tvg-logo="([^"]+)"/);
-                
-                // Устанавливаем значения
-                if (logoImg) {
-                    logoImg.style.display = 'block';
-                    logoImg.src = logoMatch ? logoMatch[1] : '';
-                    
-                    if (logoImg.parentNode) {
-                        logoImg.parentNode.classList.remove('default');
-                        
-                        if (logoImg.parentNode.textContent === '📺') {
-                            logoImg.parentNode.textContent = '';
-                        }
-                    }
-                }
-                
-                channelName.textContent = cleanChannelName(channel.name);
-                channelGroup.textContent = channel.group;
-                
-                // Показываем контейнер
-                infoContainer.style.display = 'flex';
-            } catch (error) {
-                console.error('Ошибка отображения информации о канале:', error);
-            }
-        }
-
-        function playChannel(url) {
-            try {
-                const video = document.getElementById('player');
-                const loadingIndicator = document.getElementById('loadingIndicator');
-                const errorMessage = document.getElementById('errorMessage');
-                
-                if (!video || !loadingIndicator || !errorMessage) {
-                    console.error('Элементы плеера не найдены');
-                    return;
-                }
-                
-                // Очистка предыдущих ошибок
+            // Воспроизведение канала
+            function playChannel(channel) {
+                // Показываем индикатор загрузки и скрываем сообщение об ошибке
+                loadingIndicator.style.display = 'flex';
                 errorMessage.style.display = 'none';
-                errorMessage.textContent = '';
                 
-                // Показываем индикатор загрузки
-                loadingIndicator.style.display = 'block';
-                
-                // Освобождаем ресурсы предыдущего плеера
+                // Уничтожить предыдущий экземпляр HLS, если он существует
                 if (currentHls) {
                     currentHls.destroy();
                     currentHls = null;
                 }
                 
-                debugLog('Начинаем воспроизведение URL', url);
+                currentChannel = channel;
                 
-                // Добавляем проксирование для обхода CORS
-                const proxyUrl = `/proxy?url=${encodeURIComponent(url)}`;
-                debugLog('Прокси URL', proxyUrl);
+                // Обновляем информацию о текущем канале
+                channelInfoName.textContent = channel.name;
+                channelInfoGroup.textContent = channel.group || 'Без категории';
                 
+                // Обновляем логотип канала
+                channelInfoLogo.innerHTML = '';
+                if (channel.logo) {
+                    const img = document.createElement('img');
+                    img.src = channel.logo;
+                    img.alt = channel.name;
+                    img.onerror = function() {
+                        this.style.display = 'none';
+                        channelInfoLogo.textContent = channel.name.charAt(0);
+                        channelInfoLogo.classList.add('default');
+                    };
+                    channelInfoLogo.appendChild(img);
+                } else {
+                    channelInfoLogo.textContent = channel.name.charAt(0);
+                    channelInfoLogo.classList.add('default');
+                }
+                
+                // Если HLS.js поддерживается
                 if (Hls.isSupported()) {
-                    debugLog('HLS.js поддерживается');
                     const hls = new Hls({
-                        xhrSetup: function(xhr) {
-                            // Отключаем withCredentials, так как он вызывает CORS-ошибки
-                            xhr.withCredentials = false;
-                            // Отладка запросов
-                            xhr.addEventListener('loadend', function() {
-                                debugLog(`XHR ${xhr.status} ${xhr.responseURL}`, xhr);
-                            });
-                        },
-                        debug: debugMode,
-                        // Увеличиваем размер буфера для предотвращения частых подгрузок
-                        maxBufferLength: 60,          // Увеличиваем с 30 до 60 секунд
-                        maxMaxBufferLength: 600,      // Максимально допустимый буфер до 10 минут (было 600)
-                        maxBufferSize: 60 * 1000000,  // Максимальный размер буфера в байтах (60MB)
-                        maxBufferHole: 0.5,           // Максимальный разрыв в буфере (было 0.1)
-                        highBufferWatchdogPeriod: 3,  // Период проверки переполнения буфера (было 2)
-                        // Настройки загрузки фрагментов
-                        fragLoadingMaxRetry: 6,       // Максимальное количество попыток загрузки фрагмента (было 6)
-                        fragLoadingRetryDelay: 500,   // Начальная задержка перед повторной загрузкой (было 1000)
-                        fragLoadingMaxRetryTimeout: 64000  // Максимальная задержка между попытками (было 64000)
-                    });
-                    currentHls = hls;
-                    
-                    // Увеличиваем таймауты для сетевых запросов
-                    hls.config.manifestLoadingTimeOut = 20000; // 20 секунд для загрузки манифеста
-                    hls.config.manifestLoadingMaxRetry = 4;    // Больше попыток
-                    hls.config.fragLoadingTimeOut = 20000;     // 20 секунд для загрузки фрагментов
-                    
-                    hls.loadSource(proxyUrl);
-                    hls.attachMedia(video);
-                    
-                    // Отслеживаем все события для отладки
-                    hls.on(Hls.Events.MANIFEST_LOADED, function(event, data) {
-                        debugLog('Манифест загружен', data);
+                        maxBufferLength: 30,
+                        maxMaxBufferLength: 60
                     });
                     
-                    hls.on(Hls.Events.LEVEL_LOADED, function(event, data) {
-                        debugLog('Уровень загружен', data);
-                    });
+                    hls.loadSource(`/api/stream/${channel.id}`);
+                    hls.attachMedia(player);
                     
-                    hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
-                        debugLog('Манифест обработан', data);
-                        
-                        // Заполняем список качества
-                        const qualitySelect = document.getElementById('qualitySelect');
-                        if (qualitySelect) {
-                            // Очищаем текущие опции
-                            qualitySelect.innerHTML = '';
-                            
-                            // Добавляем опцию "Авто"
-                            const autoOption = document.createElement('option');
-                            autoOption.value = "-1";
-                            autoOption.textContent = "Авто";
-                            qualitySelect.appendChild(autoOption);
-                            
-                            // Добавляем доступные разрешения
-                            const levels = data.levels;
-                            levels.forEach((level, index) => {
-                                const option = document.createElement('option');
-                                option.value = index;
-                                
-                                // Форматируем название разрешения
-                                let resolution = '';
-                                if (level.height) {
-                                    resolution = `${level.height}p`;
-                                    if (level.width) {
-                                        resolution += ` (${level.width}x${level.height})`;
-                                    }
-                                } else if (level.bitrate) {
-                                    resolution = `${Math.round(level.bitrate / 1000)} Кбит/с`;
-                                } else {
-                                    resolution = `Уровень ${index + 1}`;
-                                }
-                                
-                                option.textContent = resolution;
-                                qualitySelect.appendChild(option);
-                            });
-                        }
-                        
-                        loadingIndicator.style.display = 'none';
-                        video.play().catch(e => {
-                            errorMessage.textContent = `Ошибка воспроизведения: ${e.message}`;
-                            errorMessage.style.display = 'block';
-                            debugLog('Ошибка воспроизведения', e);
+                    hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                        player.play().catch(e => {
+                            console.error('Ошибка автовоспроизведения:', e);
                         });
                     });
                     
-                    // Обработка ошибок
-                    hls.on(Hls.Events.ERROR, function (event, data) {
-                        console.error('HLS ошибка:', data);
-                        debugLog('HLS ошибка', data);
-                        
+                    hls.on(Hls.Events.ERROR, function(event, data) {
                         if (data.fatal) {
+                            console.error('Фатальная ошибка HLS:', data);
+                            errorMessage.style.display = 'flex';
                             loadingIndicator.style.display = 'none';
-                            
-                            switch(data.type) {
-                                case Hls.ErrorTypes.NETWORK_ERROR:
-                                    console.log('Сетевая ошибка, пробуем напрямую...');
-                                    errorMessage.textContent = `Ошибка сети: ${data.details}. Пробуем альтернативный способ...`;
-                                    errorMessage.style.display = 'block';
-                                    
-                                    // Пробуем напрямую без прокси как последний вариант
-                                    debugLog('Пробуем прямое воспроизведение', url);
-                                    video.src = url;
-                                    video.play().catch(e => {
-                                        errorMessage.textContent = `Канал недоступен: ${e.message}`;
-                                        debugLog('Ошибка прямого воспроизведения', e);
-                                    });
-                                    break;
-                                    
-                                case Hls.ErrorTypes.MEDIA_ERROR:
-                                    console.log('Ошибка медиа, пробуем восстановить...');
-                                    errorMessage.textContent = `Ошибка воспроизведения: ${data.details}. Пробуем восстановить...`;
-                                    errorMessage.style.display = 'block';
-                                    hls.recoverMediaError();
-                                    break;
-                                    
-                                default:
-                                    errorMessage.textContent = `Неустранимая ошибка: ${data.details}`;
-                                    errorMessage.style.display = 'block';
-                                    break;
-                            }
                         }
                     });
-                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                    // Safari поддерживает нативно
-                    debugLog('Используем нативную поддержку HLS');
-                    video.src = proxyUrl;
-                    video.addEventListener('loadedmetadata', function () {
-                        loadingIndicator.style.display = 'none';
-                        video.play().catch(e => {
-                            errorMessage.textContent = `Ошибка воспроизведения: ${e.message}`;
-                            errorMessage.style.display = 'block';
-                            debugLog('Ошибка воспроизведения в Safari', e);
+                    
+                    // Сохраняем экземпляр для последующего уничтожения
+                    currentHls = hls;
+                }
+                // Для встроенной поддержки HLS (Safari)
+                else if (player.canPlayType('application/vnd.apple.mpegurl')) {
+                    player.src = `/api/stream/${channel.id}`;
+                    player.addEventListener('loadedmetadata', function() {
+                        player.play().catch(e => {
+                            console.error('Ошибка автовоспроизведения:', e);
                         });
                     });
                     
-                    video.addEventListener('error', function(e) {
+                    player.addEventListener('error', function() {
+                        console.error('Ошибка воспроизведения видео');
+                        errorMessage.style.display = 'flex';
                         loadingIndicator.style.display = 'none';
-                        let errMsg = 'Неизвестная ошибка';
-                        if (video.error) {
-                            switch(video.error.code) {
-                                case 1: errMsg = 'Процесс получения прерван'; break;
-                                case 2: errMsg = 'Сетевая ошибка'; break;
-                                case 3: errMsg = 'Проблема декодирования'; break;
-                                case 4: errMsg = 'Формат не поддерживается'; break;
-                                default: errMsg = video.error.message;
-                            }
-                        }
-                        errorMessage.textContent = `Ошибка загрузки видео: ${errMsg}`;
-                        errorMessage.style.display = 'block';
-                        debugLog('Ошибка видео элемента', video.error);
                     });
                 } else {
+                    console.error('HLS не поддерживается в этом браузере');
+                    errorMessage.style.display = 'flex';
                     loadingIndicator.style.display = 'none';
-                    alert('Ваш браузер не поддерживает HLS');
                 }
-            } catch (error) {
-                console.error('Ошибка воспроизведения канала:', error);
-                const errorMessage = document.getElementById('errorMessage');
-                if (errorMessage) {
-                    errorMessage.textContent = `Ошибка: ${error.message}`;
-                    errorMessage.style.display = 'block';
+                
+                // Сохраняем последний канал в localStorage
+                localStorage.setItem('lastChannel', JSON.stringify(channel));
+            }
+            
+            // Обработчики кнопок управления
+            playPauseBtn.addEventListener('click', () => {
+                if (player.paused) {
+                    player.play().then(() => {
+                        playPauseBtn.innerHTML = `
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z"/>
+                            </svg>
+                            <span class="btn-text">Пауза</span>
+                        `;
+                        playPauseBtn.title = "Пауза";
+                    }).catch(e => {
+                        console.error('Ошибка воспроизведения:', e);
+                    });
+                } else {
+                    player.pause();
+                    playPauseBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/>
+                        </svg>
+                        <span class="btn-text">Воспроизвести</span>
+                    `;
+                    playPauseBtn.title = "Воспроизвести";
+                }
+            });
+            
+            stopBtn.addEventListener('click', () => {
+                if (player) {
+                    player.pause();
+                    player.currentTime = 0;
+                    
+                    // Уничтожаем экземпляр HLS для полной остановки потока
+                    if (currentHls) {
+                        currentHls.destroy();
+                        currentHls = null;
+                    }
+                    
+                    // Очищаем источник для полного сброса
+                    player.removeAttribute('src');
+                    player.load();
+                    
+                    // Скрываем загрузчик и сообщение об ошибке
+                    loadingIndicator.style.display = 'none';
+                    errorMessage.style.display = 'none';
+                    
+                    // Отображаем состояние плеера
+                    playPauseBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/>
+                        </svg>
+                        <span class="btn-text">Воспроизвести</span>
+                    `;
+                    playPauseBtn.title = "Воспроизвести";
+                }
+            });
+            
+            muteBtn.addEventListener('click', () => {
+                player.muted = !player.muted;
+                
+                if (player.muted) {
+                    muteBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M6.717 3.55A.5.5 0 0 1 7 4v8a.5.5 0 0 1-.812.39L3.825 10.5H1.5A.5.5 0 0 1 1 10V6a.5.5 0 0 1 .5-.5h2.325l2.363-1.89a.5.5 0 0 1 .529-.06zM6 5.04 4.312 6.39A.5.5 0 0 1 4 6.5H2v3h2a.5.5 0 0 1 .312.11L6 10.96V5.04zm7.854.606a.5.5 0 0 1 0 .708L12.207 8l1.647 1.646a.5.5 0 0 1-.708.708L11.5 8.707l-1.646 1.647a.5.5 0 0 1-.708-.708L10.793 8 9.146 6.354a.5.5 0 1 1 .708-.708L11.5 7.293l1.646-1.647a.5.5 0 0 1 .708 0z"/>
+                        </svg>
+                        <span class="btn-text">Включить звук</span>
+                    `;
+                    muteBtn.title = "Включить звук";
+                } else {
+                    muteBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M11.536 14.01A8.473 8.473 0 0 0 14.026 8a8.473 8.473 0 0 0-2.49-6.01l-.708.707A7.476 7.476 0 0 1 13.025 8c0 2.071-.84 3.946-2.197 5.303l.708.707z"/>
+                            <path d="M10.121 12.596A6.48 6.48 0 0 0 12.025 8a6.48 6.48 0 0 0-1.904-4.596l-.707.707A5.483 5.483 0 0 1 11.025 8a5.483 5.483 0 0 1-1.61 3.89l.706.706z"/>
+                            <path d="M10.025 8a4.486 4.486 0 0 1-1.318 3.182L8 10.475A3.489 3.489 0 0 0 9.025 8c0-.966-.392-1.841-1.025-2.475l.707-.707A4.486 4.486 0 0 1 10.025 8zM7 4a.5.5 0 0 0-.812-.39L3.825 5.5H1.5A.5.5 0 0 0 1 6v4a.5.5 0 0 0 .5.5h2.325l2.363 1.89A.5.5 0 0 0 7 12V4zM4.312 6.39 6 5.04v5.92L4.312 9.61A.5.5 0 0 0 4 9.5H2v-3h2a.5.5 0 0 0 .312-.11z"/>
+                        </svg>
+                        <span class="btn-text">Без звука</span>
+                    `;
+                    muteBtn.title = "Выключить звук";
+                }
+            });
+            
+            // Обработка двойного нажатия на плеер для полноэкранного режима
+            const playerContainer = document.querySelector('.player-container');
+            player.addEventListener('dblclick', () => {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen().catch(err => {
+                        console.error('Ошибка выхода из полноэкранного режима:', err);
+                    });
+                } else {
+                    playerContainer.requestFullscreen().catch(err => {
+                        console.error('Ошибка перехода в полноэкранный режим:', err);
+                    });
+                }
+            });
+            
+            // Фильтрация каналов
+            searchInput.addEventListener('input', renderChannelList);
+            categorySelect.addEventListener('change', renderChannelList);
+            
+            // Обновление списка каналов с визуальной обратной связью
+            refreshBtn.addEventListener('click', async () => {
+                // Добавляем класс с анимацией вращения
+                refreshBtn.classList.add('refreshing');
+                
+                // Показываем уведомление о процессе обновления
+                const oldText = refreshBtn.querySelector('.btn-text').textContent;
+                refreshBtn.querySelector('.btn-text').textContent = 'Обновляю...';
+                
+                // Сохраняем старые значения для сравнения
+                const oldCount = channelCount.textContent;
+                const oldTime = lastUpdate.textContent;
+                
+                try {
+                    // Выполняем обновление
+                    const result = await fetch('/refresh-playlist', { method: 'GET' });
+                    if (!result.ok) {
+                        throw new Error('Ошибка обновления плейлиста');
+                    }
+                    
+                    // После обновления плейлиста загружаем каналы
+                    const data = await fetchChannels();
+                    
+                    // Отображаем оповещение об успешном обновлении
+                    if (oldCount !== channelCount.textContent || oldTime !== lastUpdate.textContent) {
+                        // Подсвечиваем изменения
+                        channelCount.classList.add('updated');
+                        lastUpdate.classList.add('updated');
+                        
+                        // Убираем подсветку через 2 секунды
+                        setTimeout(() => {
+                            channelCount.classList.remove('updated');
+                            lastUpdate.classList.remove('updated');
+                        }, 2000);
+                        
+                        // Показываем успешное обновление
+                        refreshBtn.querySelector('.btn-text').textContent = 'Обновлено!';
+                        setTimeout(() => {
+                            refreshBtn.querySelector('.btn-text').textContent = oldText;
+                        }, 1500);
+                    } else {
+                        refreshBtn.querySelector('.btn-text').textContent = 'Без изменений';
+                        setTimeout(() => {
+                            refreshBtn.querySelector('.btn-text').textContent = oldText;
+                        }, 1500);
+                    }
+                } catch (error) {
+                    console.error('Ошибка обновления:', error);
+                    refreshBtn.querySelector('.btn-text').textContent = 'Ошибка';
+                    setTimeout(() => {
+                        refreshBtn.querySelector('.btn-text').textContent = oldText;
+                    }, 1500);
+                } finally {
+                    // Убираем класс с анимацией вращения
+                    setTimeout(() => {
+                        refreshBtn.classList.remove('refreshing');
+                    }, 500);
+                }
+            });
+            
+            // Прикрепляем к событию нажатия на кнопку Escape закрытие сайдбара
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && window.innerWidth <= 768) {
+                    sidebar.classList.add('hidden');
+                }
+            });
+            
+            // Загружаем каналы при запуске
+            fetchChannels();
+
+            // Можно добавить отображение последнего канала без воспроизведения
+            const lastChannelData = localStorage.getItem('lastChannel');
+            if (lastChannelData) {
+                try {
+                    const lastChannel = JSON.parse(lastChannelData);
+                    // Ищем канал с таким же id в загруженном списке
+                    const savedChannel = channels.find(ch => ch.id === lastChannel.id);
+                    if (savedChannel) {
+                        console.log('Найден последний канал:', savedChannel.name);
+                        // Только обновляем информацию о канале без воспроизведения
+                        channelInfoName.textContent = savedChannel.name;
+                        channelInfoGroup.textContent = savedChannel.group || 'Без категории';
+                        
+                        // Обновляем логотип канала
+                        channelInfoLogo.innerHTML = '';
+                        if (savedChannel.logo) {
+                            const img = document.createElement('img');
+                            img.src = savedChannel.logo;
+                            img.alt = savedChannel.name;
+                            img.onerror = function() {
+                                this.style.display = 'none';
+                                channelInfoLogo.textContent = savedChannel.name.charAt(0);
+                                channelInfoLogo.classList.add('default');
+                            };
+                            channelInfoLogo.appendChild(img);
+                        } else {
+                            channelInfoLogo.textContent = savedChannel.name.charAt(0);
+                            channelInfoLogo.classList.add('default');
+                        }
+                        
+                        // Сохраняем текущий канал
+                        currentChannel = savedChannel;
+                    }
+                } catch (e) {
+                    console.error('Ошибка при загрузке последнего канала:', e);
                 }
             }
-        }
+
+            // Обработчик для дополнительной кнопки выхода из полноэкранного режима
+            exitFullscreenBtn.addEventListener('click', () => {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen().catch(err => {
+                        console.error('Ошибка выхода из полноэкранного режима:', err);
+                    });
+                }
+            });
+
+            // Обновляем обработчик полноэкранного режима
+            fullscreenBtn.addEventListener('click', () => {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen().catch(err => {
+                        console.error('Ошибка выхода из полноэкранного режима:', err);
+                    });
+                } else {
+                    const playerContainer = document.querySelector('.player-container');
+                    playerContainer.requestFullscreen().catch(err => {
+                        console.error('Ошибка перехода в полноэкранный режим:', err);
+                    });
+                }
+            });
+
+            // Обработчики для кнопок показа панели с каналами
+            showSidebarBtn.addEventListener('click', () => {
+                sidebar.classList.remove('hidden');
+            });
+        });
     </script>
 </body>
 </html>
